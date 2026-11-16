@@ -1,0 +1,14 @@
+{
+  "name": "calma",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Calma: frases, respiración y música suave para tranquilizar la mente",
+  "scripts": {
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2"
+  }
+}

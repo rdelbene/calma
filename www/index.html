@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d2b3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Calma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#1d2b3a; --bg2:#2f4858; --bg3:#4a6670;
+    --ink:#f3efe6; --ink-soft:rgba(243,239,230,.68); --ink-faint:rgba(243,239,230,.35);
+    --glass:rgba(255,255,255,.08); --glass-b:rgba(255,255,255,.14);
+    --accent:#e9c99a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{
+    font-family:'Nunito',system-ui,sans-serif;color:var(--ink);
+    background:var(--bg1);
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  /* fondo que respira despacio */
+  .sky{position:fixed;inset:0;z-index:0;background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%,var(--bg3));transition:background 3s ease}
+  .orb{position:fixed;border-radius:50%;filter:blur(60px);opacity:.45;z-index:0;animation:drift 38s ease-in-out infinite alternate}
+  .orb.a{width:60vmax;height:60vmax;background:#7aa5a8;top:-20vmax;left:-15vmax}
+  .orb.b{width:50vmax;height:50vmax;background:#c9a27e;bottom:-22vmax;right:-18vmax;animation-duration:46s;opacity:.3}
+  @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(6vmax,4vmax) scale(1.12)}}
+  @media (prefers-reduced-motion:reduce){.orb{animation:none}}
+
+  .app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+  header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px 0}
+  .brand{font-family:'Fraunces',serif;font-weight:300;font-size:22px;letter-spacing:.06em}
+  .brand small{display:block;font-family:'Nunito';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+  .iconbtn{background:var(--glass);border:1px solid var(--glass-b);color:var(--ink);width:42px;height:42px;border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:background .3s}
+  .iconbtn:hover{background:rgba(255,255,255,.14)}
+  .iconbtn svg{width:20px;height:20px}
+
+  main{flex:1;position:relative;overflow:hidden}
+  .view{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 30px;text-align:center;opacity:0;pointer-events:none;transition:opacity .8s ease}
+  .view.on{opacity:1;pointer-events:auto}
+
+  /* frases */
+  .tag{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:22px;min-height:14px}
+  .quote{font-family:'Fraunces',serif;font-weight:300;font-size:clamp(26px,6.4vw,40px);line-height:1.32;max-width:620px;transition:opacity .9s ease,transform .9s ease}
+  .quote.out{opacity:0;transform:translateY(8px)}
+  .hint{margin-top:34px;font-size:13px;color:var(--ink-faint)}
+  .qactions{display:flex;gap:12px;margin-top:26px}
+  .pill{background:var(--glass);border:1px solid var(--glass-b);color:var(--ink);border-radius:999px;padding:10px 18px;font:600 14px 'Nunito';cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .3s}
+  .pill:hover{background:rgba(255,255,255,.14)}
+  .pill svg{width:16px;height:16px}
+  .pill.fav-on svg{fill:var(--accent);stroke:var(--accent)}
+
+  /* respiración */
+  .breath-wrap{position:relative;width:min(70vw,300px);height:min(70vw,300px);display:grid;place-items:center}
+  .ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--glass-b)}
+  .circle{width:42%;height:42%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f6e7cf,#c9a27e 55%,#8a6f57);box-shadow:0 0 60px rgba(233,201,154,.35);transition:transform 4s ease-in-out}
+  .breath-label{font-family:'Fraunces',serif;font-weight:300;font-size:30px;margin-top:34px;min-height:40px}
+  .breath-count{color:var(--ink-soft);font-size:15px;margin-top:6px;min-height:20px}
+  .breath-sub{color:var(--ink-faint);font-size:13px;margin-top:22px;max-width:320px;line-height:1.5}
+
+  /* favoritas */
+  .favlist{width:100%;max-width:560px;max-height:100%;overflow:auto;text-align:left;padding:10px 0}
+  .favlist h2{font-family:'Fraunces',serif;font-weight:300;font-size:26px;margin:0 0 16px;text-align:center}
+  .favitem{background:var(--glass);border:1px solid var(--glass-b);border-radius:16px;padding:16px 18px;margin-bottom:10px;font-family:'Fraunces',serif;font-weight:300;font-size:18px;line-height:1.4;display:flex;gap:12px;align-items:flex-start}
+  .favitem span{flex:1}
+  .favitem button{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:18px;padding:0 4px}
+  .empty{color:var(--ink-soft);text-align:center;font-size:15px;line-height:1.6}
+
+  /* sonido */
+  .sound{position:absolute;right:22px;top:70px;z-index:5;background:rgba(20,30,40,.85);backdrop-filter:blur(14px);border:1px solid var(--glass-b);border-radius:18px;padding:16px;width:240px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:all .35s ease}
+  .sound.on{opacity:1;transform:none;pointer-events:auto}
+  .sound h3{margin:0 0 12px;font:600 12px 'Nunito';letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+  .srow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .srow label{flex:1;font-size:14px}
+  .tog{width:42px;height:24px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;cursor:pointer;border:none;transition:background .3s}
+  .tog::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:left .3s}
+  .tog.on{background:var(--accent)}
+  .tog.on::after{left:21px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+
+  /* barra inferior */
+  nav{display:flex;justify-content:center;gap:6px;padding:12px 16px 22px}
+  nav button{background:none;border:none;color:var(--ink-faint);font:600 12px 'Nunito';letter-spacing:.08em;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 16px;border-radius:14px;cursor:pointer;transition:color .3s,background .3s}
+  nav button svg{width:22px;height:22px}
+  nav button.on{color:var(--ink);background:var(--glass)}
+
+  /* bienvenida */
+  .welcome{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;background:linear-gradient(160deg,#16222e,#2a3f4d);transition:opacity 1.2s ease}
+  .welcome.gone{opacity:0;pointer-events:none}
+  .welcome h1{font-family:'Fraunces',serif;font-weight:300;font-size:46px;margin:0;letter-spacing:.04em}
+  .welcome p{color:var(--ink-soft);font-size:16px;margin:14px 0 36px;max-width:300px;line-height:1.55}
+  .welcome .pill{padding:14px 28px;font-size:15px}
+  .welcome .skip{margin-top:16px;background:none;border:none;color:var(--ink-faint);font:14px 'Nunito';cursor:pointer}
+</style>
+</head>
+<body>
+<div class="sky" id="sky"></div>
+<div class="orb a"></div><div class="orb b"></div>
+
+<div class="welcome" id="welcome">
+  <h1>Calma</h1>
+  <p>Un lugar para frenar un momento. Respirá. No hay apuro.</p>
+  <button class="pill" id="startSound">Entrar con música suave</button>
+  <button class="skip" id="startSilent">Entrar en silencio</button>
+</div>
+
+<div class="app">
+  <header>
+    <div class="brand">Calma<small>un momento para vos</small></div>
+    <button class="iconbtn" id="soundBtn" aria-label="Sonido">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
+    </button>
+  </header>
+
+  <div class="sound" id="soundPanel">
+    <h3>Sonido</h3>
+    <div class="srow"><label>Música suave</label><button class="tog" id="togMusic" aria-label="Música"></button></div>
+    <div class="srow"><label>Lluvia</label><button class="tog" id="togRain" aria-label="Lluvia"></button></div>
+    <div class="srow" style="margin-bottom:0"><label style="flex:0 0 auto;margin-right:6px">Volumen</label><input type="range" id="vol" min="0" max="100" value="55"></div>
+  </div>
+
+  <main id="main">
+    <section class="view on" id="v-frases">
+      <div class="tag" id="tag"></div>
+      <div class="quote" id="quote"></div>
+      <div class="qactions">
+        <button class="pill" id="favBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7.5-4.6-9.3-9.2C1.4 8.3 3.6 4.5 7.3 4.5c2 0 3.4 1.1 4.7 2.7 1.3-1.6 2.7-2.7 4.7-2.7 3.7 0 5.9 3.8 4.6 7.3C19.5 16.4 12 21 12 21z"/></svg><span>Guardar</span></button>
+        <button class="pill" id="nextBtn">Otra frase</button>
+      </div>
+      <div class="hint">Tocá la frase o deslizá para ver otra</div>
+    </section>
+
+    <section class="view" id="v-respirar">
+      <div class="breath-wrap">
+        <div class="ring"></div>
+        <div class="circle" id="circle"></div>
+      </div>
+      <div class="breath-label" id="bLabel">Tocá para empezar</div>
+      <div class="breath-count" id="bCount"></div>
+      <div class="breath-sub" id="bSub">Inhalá 4 segundos, sostené 4, exhalá 6. Unas pocas vueltas alcanzan para bajar el ritmo.</div>
+    </section>
+
+    <section class="view" id="v-favs">
+      <div class="favlist" id="favlist"></div>
+    </section>
+  </main>
+
+  <nav>
+    <button class="on" data-v="frases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h16M4 12h12M4 18h8"/></svg>Frases</button>
+    <button data-v="respirar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8.5" opacity=".5"/></svg>Respirar</button>
+    <button data-v="favs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.6-9.3-9.2C1.4 8.3 3.6 4.5 7.3 4.5c2 0 3.4 1.1 4.7 2.7 1.3-1.6 2.7-2.7 4.7-2.7 3.7 0 5.9 3.8 4.6 7.3C19.5 16.4 12 21 12 21z"/></svg>Guardadas</button>
+  </nav>
+</div>
+
+<script>
+/* ===== Contenido =====
+   Frases originales sobre paz y calma mental.
+   Cuando tengamos las transcripciones de los videos, se suman acá como una categoría más. */
+const FRASES = [
+  ["Ahora","Este momento es suficiente. No tenés que resolver todo hoy."],
+  ["Ahora","Lo único que existe de verdad es este respiro. Quedate en él."],
+  ["Ahora","El pasado ya pasó y el futuro todavía no llegó. Acá, ahora, estás bien."],
+  ["Ahora","No hace falta llegar a ningún lado en este momento."],
+  ["Ahora","Mirá a tu alrededor y nombrá tres cosas que ves. Volviste al presente."],
+  ["Mente","Los pensamientos son como nubes: pasan. Vos sos el cielo."],
+  ["Mente","No tenés que creerle a cada pensamiento que aparece."],
+  ["Mente","Una mente agitada es como agua turbia: si la dejás quieta, se aclara sola."],
+  ["Mente","Podés observar lo que sentís sin pelearte con eso."],
+  ["Mente","Preocuparte no cambia el mañana, pero sí le quita paz al hoy."],
+  ["Mente","Cuando la mente corre, el cuerpo puede ir despacio. Empezá por ahí."],
+  ["Mente","No todo lo que pensás necesita una respuesta ahora."],
+  ["Soltar","Soltar no es rendirse. Es dejar de cargar lo que no te toca."],
+  ["Soltar","Hay cosas que no dependen de vos. Esas, dejalas ir."],
+  ["Soltar","Aflojá los hombros. Aflojá la mandíbula. Aflojá un poco el control."],
+  ["Soltar","No tenés que tener todas las respuestas para estar en paz."],
+  ["Soltar","Lo que te pesa hoy no es para siempre."],
+  ["Soltar","Perdonar también es una forma de descansar."],
+  ["Cuerpo","Tu respiración siempre está con vos. Es tu lugar seguro."],
+  ["Cuerpo","Sentí el peso de tu cuerpo apoyado. Algo te sostiene."],
+  ["Cuerpo","Exhalar largo le dice a tu cuerpo que no hay peligro."],
+  ["Cuerpo","Poné una mano en el pecho. Sentí cómo sube y baja. Estás acá."],
+  ["Cuerpo","Tomate un vaso de agua, despacio. A veces la calma empieza por algo simple."],
+  ["Vos","Sos más que lo que estás sintiendo en este momento."],
+  ["Vos","Tratate con la misma paciencia que le tendrías a alguien que querés."],
+  ["Vos","Está bien ir despacio. Está bien descansar."],
+  ["Vos","No tenés que ser perfecto para merecer tranquilidad."],
+  ["Vos","Ya superaste días difíciles antes. Este también va a pasar."],
+  ["Vos","Hacer menos a veces es exactamente lo que necesitás."],
+  ["Vos","Tu paz es importante. Cuidarla no es egoísmo."],
+  ["Paz","La paz no es la ausencia de problemas, es la calma en medio de ellos."],
+  ["Paz","Un paso a la vez. Una respiración a la vez."],
+  ["Paz","La calma no se busca afuera: se encuentra cuando dejás de correr."],
+  ["Paz","El silencio también es una respuesta."],
+  ["Paz","La tranquilidad se practica, como cualquier otra cosa. Hoy es un buen día para practicar."],
+  ["Paz","Lo simple también es valioso: un rato de sol, una charla, un té caliente."],
+  ["Paz","Así como el río no empuja, fluye. Podés hacer lo mismo."],
+  ["Paz","No todo merece tu energía. Elegí en qué ponerla."],
+  ["Paz","Agradecé una cosa pequeña de hoy. Solo una."],
+  ["Paz","Todo lo que necesitás en este instante ya está acá."]
+];
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+
+/* ===== Frases ===== */
+let order = [], pos = 0;
+let favs = store.get('calma-favs', []);
+function shuffle(){order = FRASES.map((_,i)=>i).sort(()=>Math.random()-.5);pos=0}
+shuffle();
+function current(){return FRASES[order[pos]]}
+function render(){
+  const [tag,text] = current();
+  $('tag').textContent = tag;
+  $('quote').textContent = text;
+  const on = favs.includes(text);
+  $('favBtn').classList.toggle('fav-on', on);
+  $('favBtn').querySelector('span').textContent = on ? 'Guardada' : 'Guardar';
+  tint();
+}
+let busy=false;
+function next(){
+  if(busy) return; busy=true;
+  $('quote').classList.add('out'); $('tag').style.opacity=0;
+  setTimeout(()=>{
+    pos++; if(pos>=order.length) shuffle();
+    render();
+    $('quote').classList.remove('out'); $('tag').style.opacity=1;
+    busy=false;
+  },700);
+}
+$('tag').style.transition='opacity .9s';
+$('quote').addEventListener('click',next);
+$('nextBtn').addEventListener('click',next);
+$('favBtn').addEventListener('click',()=>{
+  const t = current()[1];
+  favs = favs.includes(t) ? favs.filter(x=>x!==t) : [t,...favs];
+  store.set('calma-favs',favs); render();
+});
+let sx=null;
+$('v-frases').addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+$('v-frases').addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)next();sx=null});
+
+const PALETAS = [
+  ['#1d2b3a','#2f4858','#4a6670'],
+  ['#1f2a33','#3b4a52','#6b7f78'],
+  ['#232036','#3a3a5c','#5f6a8a'],
+  ['#1b2d2a','#2f4a44','#5c7a6c'],
+  ['#2a2330','#4a3a48','#7a6470']
+];
+function tint(){
+  const p = PALETAS[pos % PALETAS.length];
+  $('sky').style.background = `linear-gradient(160deg,${p[0]},${p[1]} 55%,${p[2]})`;
+}
+
+/* ===== Favoritas ===== */
+function renderFavs(){
+  const box = $('favlist');
+  if(!favs.length){box.innerHTML='<h2>Guardadas</h2><p class="empty">Todavía no guardaste ninguna frase.<br>Tocá “Guardar” en las que te hagan bien.</p>';return}
+  box.innerHTML='<h2>Guardadas</h2>';
+  favs.forEach(t=>{
+    const d=document.createElement('div');d.className='favitem';
+    const s=document.createElement('span');s.textContent=t;
+    const b=document.createElement('button');b.textContent='×';b.setAttribute('aria-label','Quitar');
+    b.onclick=()=>{favs=favs.filter(x=>x!==t);store.set('calma-favs',favs);renderFavs();render()};
+    d.append(s,b);box.append(d);
+  });
+}
+
+/* ===== Navegación ===== */
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
+  if(b.dataset.v==='favs') renderFavs();
+  if(b.dataset.v!=='respirar') stopBreath();
+}));
+
+/* ===== Respiración 4-4-6 ===== */
+const FASES=[['Inhalá',4,1.9],['Sostené',4,1.9],['Exhalá',6,1]];
+let bTimer=null, bRunning=false;
+function stopBreath(){
+  bRunning=false; clearTimeout(bTimer);
+  $('circle').style.transition='transform 1.5s ease'; $('circle').style.transform='scale(1)';
+  $('bLabel').textContent='Tocá para empezar'; $('bCount').textContent='';
+}
+function runBreath(i=0,rounds=0){
+  if(!bRunning) return;
+  const [txt,secs,scale]=FASES[i];
+  $('bLabel').textContent=txt;
+  $('circle').style.transition=`transform ${secs}s ease-in-out`;
+  $('circle').style.transform=`scale(${scale})`;
+  let left=secs; $('bCount').textContent=left;
+  const tick=()=>{ if(!bRunning) return; left--; if(left>0){$('bCount').textContent=left;bTimer=setTimeout(tick,1000)} else {
+      const ni=(i+1)%FASES.length; const nr=ni===0?rounds+1:rounds;
+      if(nr>=6){bRunning=false;$('bLabel').textContent='Muy bien';$('bCount').textContent='Tocá para otra ronda';$('circle').style.transform='scale(1)';return}
+      runBreath(ni,nr);
+  }};
+  bTimer=setTimeout(tick,1000);
+}
+$('v-respirar').addEventListener('click',()=>{ if(bRunning){stopBreath()} else {bRunning=true;runBreath()} });
+
+/* ===== Sonido (generado en el momento, sin archivos) ===== */
+let ctx=null, master=null, musicBus=null, rainBus=null, musicOn=false, rainOn=false, chordTimer=null;
+function initAudio(){
+  if(ctx) return;
+  const AC = window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  ctx=new AC();
+  master=ctx.createGain(); master.gain.value=$('vol').value/100*0.6;
+  // reverberación simple con retardos
+  const verbIn=ctx.createGain(); const verbOut=ctx.createGain(); verbOut.gain.value=.5;
+  [0.31,0.47,0.73].forEach((t,k)=>{const d=ctx.createDelay(2);d.delayTime.value=t;const fb=ctx.createGain();fb.gain.value=.45-k*.07;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1800;
+    verbIn.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(verbOut)});
+  verbOut.connect(master);
+  musicBus=ctx.createGain(); musicBus.gain.value=0;
+  const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1400;
+  musicBus.connect(lp); lp.connect(master); lp.connect(verbIn);
+  rainBus=ctx.createGain(); rainBus.gain.value=0; rainBus.connect(master);
+  master.connect(ctx.destination);
+  makeRain();
+}
+const CHORDS=[[48,55,64,71],[45,52,60,67],[41,48,57,64],[43,50,59,62]]; // Cmaj7, Am7, Fmaj7, G
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+let ci=0;
+function playChord(){
+  if(!musicOn) return;
+  const now=ctx.currentTime, dur=10;
+  CHORDS[ci%CHORDS.length].forEach((m,k)=>{
+    [0,4].forEach(det=>{
+      const o=ctx.createOscillator(); o.type=k===0?'sine':'triangle';
+      o.frequency.value=mtof(m); o.detune.value=det-2;
+      const g=ctx.createGain(); g.gain.setValueAtTime(0,now);
+      g.gain.linearRampToValueAtTime(k===0?.09:.045,now+3.5);
+      g.gain.linearRampToValueAtTime(0,now+dur+2);
+      o.connect(g); g.connect(musicBus); o.start(now); o.stop(now+dur+2.2);
+    });
+  });
+  // una nota suelta arriba, como campanita
+  if(Math.random()<.7){
+    const notes=CHORDS[ci%CHORDS.length]; const m=notes[1+Math.floor(Math.random()*3)]+12;
+    const t=now+2+Math.random()*5; const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=mtof(m);
+    const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.035,t+.05); g.gain.exponentialRampToValueAtTime(.0001,t+4);
+    o.connect(g); g.connect(musicBus); o.start(t); o.stop(t+4.2);
+  }
+  ci++;
+  chordTimer=setTimeout(playChord,dur*1000-1500);
+}
+function makeRain(){
+  const len=ctx.sampleRate*3, buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+  let last=0; for(let i=0;i<len;i++){const w=Math.random()*2-1; last=(last+0.02*w)/1.02; d[i]=(w*0.35+last*3.2)*0.5}
+  const src=ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+  const bp=ctx.createBiquadFilter(); bp.type='lowpass'; bp.frequency.value=2200;
+  const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=250;
+  const g=ctx.createGain(); g.gain.value=.5;
+  src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(rainBus); src.start();
+}
+function fade(node,to,secs){const t=ctx.currentTime;node.gain.cancelScheduledValues(t);node.gain.setValueAtTime(node.gain.value,t);node.gain.linearRampToValueAtTime(to,t+secs)}
+function setMusic(on){
+  initAudio(); if(!ctx) return; ctx.resume&&ctx.resume().catch(()=>{});
+  musicOn=on; $('togMusic').classList.toggle('on',on);
+  if(on){fade(musicBus,1,3); clearTimeout(chordTimer); playChord()} else {fade(musicBus,0,3); clearTimeout(chordTimer)}
+  store.set('calma-music',on);
+}
+function setRain(on){
+  initAudio(); if(!ctx) return; ctx.resume&&ctx.resume().catch(()=>{});
+  rainOn=on; $('togRain').classList.toggle('on',on);
+  fade(rainBus,on?.55:0,3);
+  store.set('calma-rain',on);
+}
+$('togMusic').onclick=()=>setMusic(!musicOn);
+$('togRain').onclick=()=>setRain(!rainOn);
+$('vol').oninput=e=>{ if(master) fade(master,e.target.value/100*0.6,.2) };
+$('soundBtn').onclick=e=>{e.stopPropagation();$('soundPanel').classList.toggle('on')};
+document.addEventListener('click',e=>{ if(!$('soundPanel').contains(e.target)&&e.target!==$('soundBtn')) $('soundPanel').classList.remove('on') });
+
+/* ===== Bienvenida ===== */
+function enter(withSound){
+  $('welcome').classList.add('gone');
+  if(withSound){ setMusic(true); if(store.get('calma-rain',false)) setRain(true) }
+}
+$('startSound').onclick=()=>enter(true);
+$('startSilent').onclick=()=>enter(false);
+
+render();
+</script>
+</body>
