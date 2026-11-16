@@ -22,3 +22,9 @@ En el celular, abrilo y aceptá instalar apps de origen desconocido si te lo pid
 - Cada vez que se sube un cambio a `main`, GitHub Actions compila el APK automáticamente
   (`.github/workflows/build-apk.yml`) y lo publica en Releases.
 - Usa [Capacitor](https://capacitorjs.com) para empaquetar la web como app de Android.
+
+## Firma del APK
+
+Todas las versiones se firman con la misma clave (`android/keystore/`), así cada APK nueva
+se instala encima de la anterior sin desinstalar. Si se cargan los secretos
+`CALMA_KEYSTORE_B64` y `CALMA_KEYSTORE_PASSWORD` en GitHub, se usan esos en su lugar.
