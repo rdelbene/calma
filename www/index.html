@@ -168,9 +168,23 @@
   <div class="srow"><div class="l"><b>Frase del día</b><span>Una notificación con una frase, todos los días</span></div><button class="tog" id="notifTog" aria-label="Frase del día"></button></div>
   <div class="srow"><div class="l"><b>Hora</b><span>Cuándo te llega la frase</span></div><input type="time" id="notifTime" value="09:00"></div>
   <div class="srow"><div class="l"><b>Voz en la relajación</b><span>Una voz lee los pasos en voz alta</span></div><button class="tog on" id="voiceTog" aria-label="Voz"></button></div>
+  <div class="srow"><div class="l"><b>Elegir la voz</b><span id="voiceName">La predeterminada del celular</span></div><button class="pill" id="voicePick">Elegir</button></div>
   <div class="srow"><div class="l"><b>Preguntar cómo estoy</b><span>Al abrir la app</span></div><button class="tog on" id="askTog" aria-label="Preguntar"></button></div>
   <p class="muted" style="text-align:left;margin-top:18px">Calma es un espacio para bajar un cambio, no reemplaza la ayuda profesional. Si lo que sentís te supera, hablá con alguien de confianza o con un profesional de la salud.</p>
   <p class="muted" style="text-align:left" id="version"></p>
+</div>
+
+<div class="sheet" id="voices" style="z-index:27">
+  <h3>Elegir la voz</h3>
+  <p class="muted" style="text-align:left;margin:-6px 0 14px">Tocá ▶ para escuchar cada una. Las voces dependen de tu celular.</p>
+  <div class="box" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--ink-soft)"><span>Velocidad</span><span id="rateLbl"></span></div>
+    <input type="range" id="voiceRate" min="55" max="100" value="78" style="width:100%">
+    <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--ink-soft);margin-top:10px"><span>Tono</span><span id="pitchLbl"></span></div>
+    <input type="range" id="voicePitch" min="60" max="110" value="85" style="width:100%">
+  </div>
+  <div id="voiceList"></div>
+  <button class="pill" id="voicesClose" style="width:100%;justify-content:center;margin-top:12px">Listo</button>
 </div>
 
 <div class="overlay sleep gone" id="sleepView">

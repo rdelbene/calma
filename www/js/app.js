@@ -5,7 +5,7 @@
   const Cap = window.Capacitor;
   const NATIVE = !!(Cap && Cap.isNativePlatform && Cap.isNativePlatform());
   const P = (Cap && Cap.Plugins) || {};
-  const VERSION = '2.0';
+  const VERSION = '2.1';
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem('calma-' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -291,21 +291,88 @@
     } catch (e) {}
     return ttsLang;
   }
+  /* --- voces del celular --- */
+  let voiceCache = null;
+  async function listVoices() {
+    if (voiceCache) return voiceCache;
+    let all = [];
+    try {
+      if (NATIVE && P.TextToSpeech) all = (await P.TextToSpeech.getSupportedVoices()).voices || [];
+      else if (window.speechSynthesis) {
+        all = speechSynthesis.getVoices();
+        if (!all.length) { await new Promise(r => { speechSynthesis.onvoiceschanged = r; setTimeout(r, 1500); }); all = speechSynthesis.getVoices(); }
+      }
+    } catch (e) {}
+    // guardamos el índice original: el plugin elige la voz por índice
+    voiceCache = all.map((v, i) => ({ i, uri: v.voiceURI || v.name, name: v.name || v.voiceURI, lang: (v.lang || '').replace('_', '-'), local: v.localService !== false, raw: v }))
+      .filter(v => v.lang.toLowerCase().startsWith('es'));
+    const rank = l => ({ 'es-AR': 0, 'es-US': 1, 'es-419': 2, 'es-MX': 3 })[l] ?? 5;
+    voiceCache.sort((a, b) => rank(a.lang) - rank(b.lang) || (b.local - a.local));
+    return voiceCache;
+  }
+  const REGION = { 'es-AR': 'Argentina', 'es-US': 'Latinoamérica', 'es-419': 'Latinoamérica', 'es-MX': 'México', 'es-ES': 'España', 'es-CO': 'Colombia', 'es-CL': 'Chile' };
+  const vRate = () => store.get('vRate', 0.78), vPitch = () => store.get('vPitch', 0.85);
+  async function chosenVoice() {
+    const uri = store.get('vUri', null); if (!uri) return null;
+    return (await listVoices()).find(v => v.uri === uri) || null;
+  }
+  async function sayWith(text, v) {
+    const rate = vRate(), pitch = vPitch();
+    if (NATIVE && P.TextToSpeech) {
+      const opts = { text, lang: v ? v.lang : await pickLang(), rate, pitch, volume: 1.0, category: 'playback' };
+      if (v) opts.voice = v.i;
+      return P.TextToSpeech.speak(opts);
+    }
+    if (window.speechSynthesis) return new Promise(res => {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text); u.rate = rate; u.pitch = pitch;
+      if (v) { u.voice = v.raw; u.lang = v.lang; } else u.lang = 'es-ES';
+      let done = false; const fin = () => { if (!done) { done = true; res(); } };
+      u.onend = fin; u.onerror = fin; setTimeout(fin, text.length * 150 + 3000);
+      speechSynthesis.speak(u);
+    });
+  }
   function speak(text) {
     if (!store.get('voice', true)) return new Promise(r => setTimeout(r, Math.max(3500, text.length * 65)));
-    return pickLang().then(lang => {
+    return chosenVoice().then(v => {
       if (NATIVE && P.TextToSpeech) {
-        return P.TextToSpeech.speak({ text, lang, rate: 0.82, pitch: 0.95, volume: 1.0, category: 'playback' }).catch(() => new Promise(r => setTimeout(r, text.length * 65)));
+        return sayWith(text, v).catch(() => new Promise(r => setTimeout(r, text.length * 65)));
       }
-      if (window.speechSynthesis) return new Promise(res => {
-        const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = 0.82; u.pitch = 0.95;
-        let done = false; const fin = () => { if (!done) { done = true; res(); } };
-        u.onend = fin; u.onerror = fin; setTimeout(fin, text.length * 120 + 3000);
-        speechSynthesis.speak(u);
-      });
+      if (window.speechSynthesis) return sayWith(text, v);
       return new Promise(r => setTimeout(r, Math.max(3500, text.length * 65)));
     });
   }
+  async function renderVoiceName() {
+    const v = await chosenVoice();
+    $('voiceName').textContent = v ? `${REGION[v.lang] || v.lang} · voz ${voiceCache.indexOf(v) + 1}` : 'La predeterminada del celular';
+  }
+  async function openVoices() {
+    $('voices').classList.add('on'); $('scrim').classList.add('on');
+    const L = $('voiceList'); L.innerHTML = '<p class="muted">Buscando voces…</p>';
+    const list = await listVoices();
+    if (!list.length) { L.innerHTML = '<p class="muted" style="text-align:left">No encontré voces en español. En el celular, andá a Ajustes → Idioma → Texto a voz (o "Salida de texto a voz") e instalá el español desde "Servicios de voz de Google".</p>'; return; }
+    const sel = store.get('vUri', null);
+    L.innerHTML = '';
+    list.forEach((v, n) => {
+      const d = document.createElement('div'); d.className = 'card small' + (v.uri === sel ? ' on' : '');
+      if (v.uri === sel) d.style.borderColor = 'rgba(233,201,154,.6)';
+      d.innerHTML = `<button class="iconbtn" style="width:38px;height:38px" aria-label="Escuchar">▶</button>
+        <div class="tx"><b>Voz ${n + 1} · ${REGION[v.lang] || v.lang}</b><span>${v.local ? '' : 'Necesita internet · '}${v.name}</span></div>
+        <div class="chev">${v.uri === sel ? '✓' : ''}</div>`;
+      d.querySelector('button').onclick = e => { e.stopPropagation(); stopSpeak(); sayWith('Tomá una respiración profunda, y soltala despacio. No hay apuro.', v).catch(() => toast('No pude reproducir esta voz')); };
+      d.onclick = () => { store.set('vUri', v.uri); openVoices(); renderVoiceName(); };
+      L.append(d);
+    });
+  }
+  function closeVoices() { stopSpeak(); $('voices').classList.remove('on'); if (!$('settings').classList.contains('on')) $('scrim').classList.remove('on'); }
+  const updLbls = () => { $('rateLbl').textContent = Math.round(vRate() * 100) + '%'; $('pitchLbl').textContent = vPitch() < 0.95 ? 'más grave' : vPitch() > 1.02 ? 'más agudo' : 'normal'; };
+  $('voiceRate').value = Math.round(vRate() * 100); $('voicePitch').value = Math.round(vPitch() * 100); updLbls();
+  $('voiceRate').oninput = e => { store.set('vRate', e.target.value / 100); updLbls(); };
+  $('voicePitch').oninput = e => { store.set('vPitch', e.target.value / 100); updLbls(); };
+  $('voicePick').onclick = openVoices;
+  $('voicesClose').onclick = closeVoices;
+  renderVoiceName();
+
   function stopSpeak() {
     try { if (NATIVE && P.TextToSpeech) P.TextToSpeech.stop(); else if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
   }
@@ -481,7 +548,7 @@
   /* ---------- ajustes y notificaciones ---------- */
   function openSettings() { $('settings').classList.add('on'); $('scrim').classList.add('on'); }
   function closeSettings() { $('settings').classList.remove('on'); $('scrim').classList.remove('on'); }
-  $('settingsBtn').onclick = openSettings; $('scrim').onclick = closeSettings;
+  $('settingsBtn').onclick = openSettings; $('scrim').onclick = () => { if ($('voices').classList.contains('on')) closeVoices(); else closeSettings(); };
   $('version').textContent = 'Versión ' + VERSION;
   const setTog = (el, on) => el.classList.toggle('on', !!on);
   setTog($('voiceTog'), store.get('voice', true));
@@ -546,6 +613,7 @@
     try {
       P.App.addListener('backButton', () => {
         if (!$('shareView').classList.contains('gone')) return $('shareView').classList.add('gone');
+        if ($('voices').classList.contains('on')) return closeVoices();
         if ($('settings').classList.contains('on')) return closeSettings();
         if (!$('moodsheet').classList.contains('gone')) return closeMood();
         if (!$('sleepView').classList.contains('gone')) return;
