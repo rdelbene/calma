@@ -31,11 +31,22 @@ jobs:
       - name: Copiar la app web al proyecto Android
         run: npx cap sync android
 
+      - name: Preparar clave de firma (si está configurada)
+        env:
+          KS_B64: ${{ secrets.CALMA_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/calma.jks"
+            echo "CALMA_KEYSTORE_FILE=$RUNNER_TEMP/calma.jks" >> "$GITHUB_ENV"
+          fi
+
       - name: Compilar APK
         working-directory: android
+        env:
+          CALMA_KEYSTORE_PASSWORD: ${{ secrets.CALMA_KEYSTORE_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon -PcalmaVersionCode=${{ github.run_number }} -PcalmaVersionName=2.0.${{ github.run_number }}
 
       - name: Renombrar APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk Calma.apk
@@ -49,8 +60,8 @@ jobs:
       - name: Publicar en Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Calma v1.0.${{ github.run_number }}
+          tag_name: v2.0.${{ github.run_number }}
+          name: Calma v2.0.${{ github.run_number }}
           body: |
             Descargá **Calma.apk** desde acá abajo e instalala en tu Android.
             (Puede que tengas que permitir "instalar apps de origen desconocido".)

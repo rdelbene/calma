@@ -7,8 +7,8 @@ android {
         applicationId "com.rdelbene.calma"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode((project.findProperty("calmaVersionCode") ?: "1") as Integer)
+        versionName((project.findProperty("calmaVersionName") ?: "2.0") as String)
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,7 +16,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Si existe una clave propia (secreto CALMA_KEYSTORE_B64 en GitHub), se usa para firmar
+    // y así cada versión nueva se instala encima de la anterior sin desinstalar.
+    def ks = System.getenv("CALMA_KEYSTORE_FILE")
+    signingConfigs {
+        if (ks && file(ks).exists()) {
+            calma {
+                storeFile file(ks)
+                storePassword System.getenv("CALMA_KEYSTORE_PASSWORD")
+                keyAlias "calma"
+                keyPassword System.getenv("CALMA_KEYSTORE_PASSWORD")
+            }
+        }
+    }
     buildTypes {
+        debug {
+            if (ks && file(ks).exists()) { signingConfig signingConfigs.calma }
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

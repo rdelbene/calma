@@ -2,9 +2,14 @@
 
 App para Android que te ayuda a tranquilizar la mente:
 
-- **Frases** que calman: tocá o deslizá para ver otra, y guardá las que te hagan bien.
-- **Respirar**: ejercicio guiado 4-4-6 (inhalá, sostené, exhalá).
-- **Sonido**: música suave y lluvia, generadas en el momento.
+- **¿Cómo estás ahora?**: elegís cómo te sentís y la app te muestra frases y ejercicios acordes.
+- **Frases** que calman: tocá o deslizá para ver otra, guardá las que te hagan bien y compartilas como imagen.
+- **Ejercicios**: respiración (calma 4-4-6, caja 4-4-4-4, dormir 4-7-8), técnica 5-4-3-2-1 y relajación guiada con voz.
+- **Meditar**: temporizador de 3 a 20 minutos con campana.
+- **Sonidos**: música suave, lluvia, mar, bosque, fuego y cuencos, mezclables, con modo dormir.
+- **Diario**: gratitud diaria y frases guardadas.
+- **Frase del día**: notificación diaria a la hora que elijas.
+- Funciona sin internet.
 
 ## Descargar el APK
 

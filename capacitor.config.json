@@ -5,5 +5,11 @@
   "backgroundColor": "#1d2b3a",
   "android": {
     "backgroundColor": "#1d2b3a"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_calma",
+      "iconColor": "#E9C99A"
+    }
   }
 }
